@@ -16,16 +16,24 @@ def parse_query_with_llm(user_query: str) -> Dict:
         "year": None,
         "month": None,
         "brand": None,
-        "chart": False
+        "product": None,
+        "chart": False,
+        "compare": False
     }
 
+
     # Metric detection
-    if "sale" in query:
+    if any(word in query for word in ["active store", "active stores", "unique store", "unique stores"]):
+        intent["metric"] = "active_stores"
+    elif "sale" in query:
         intent["metric"] = "sales"
 
-    if "store" in query:
-        intent["metric"] = "active_stores"
+    # Comparison detection
+    if any(word in query for word in ["compare", "vs", "versus", "between", "difference"]):
+        intent["compare"] = True
 
+    
+   
     # Chart detection
     if any(word in query for word in ["show", "chart", "graph", "plot", "trend"]):
         intent["chart"] = True
@@ -37,14 +45,23 @@ def parse_query_with_llm(user_query: str) -> Dict:
             intent["brand"] = brand
 
     # Group by detection
-    if "month" in query:
-        intent["group_by"] = "Month"
-    elif "year" in query:
+    # Group by detection
+    if intent["compare"]:
         intent["group_by"] = "Year"
-    elif "region" in query:
-        intent["group_by"] = "Region"
-    elif "brand" in query:
+    elif any(word in query for word in ["by month", "monthly"]):
+        intent["group_by"] = "Month"
+    elif any(word in query for word in ["by year", "yearly"]):
+        intent["group_by"] = "Year"
+    elif "by brand" in query:
         intent["group_by"] = "Brand"
+    elif "by product" in query:
+        intent["group_by"] = "Product"
+    elif "by region" in query:
+        intent["group_by"] = "Region"
+    else:
+        intent["group_by"] = None
+
+
 
     # Year detection (simple)
     for y in range(2020, 2031):

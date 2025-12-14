@@ -1,47 +1,81 @@
 import pandas as pd
+from config.settings import SALES_COLUMN, CUSTOMER_COLUMN, BRAND_COLUMN
 
 
 def active_stores(
-    df: pd.DataFrame,
-    brand: str = None,
-    year: int = None,
-    month: int = None
-) -> int:
-    """
-    Calculate total active (unique) stores
-    """
+    df,
+    year=None,
+    month=None,
+    brand=None
+):
     data = df.copy()
 
-    if brand:
-        data = data[data['Brand'] == brand]
+    # Step 1: Apply filters
+    if year is not None:
+        data = data[data["Year"] == year]
 
-    if year:
-        data = data[data['Year'] == year]
+    if month is not None:
+        data = data[data["Month"] == month]
 
-    if month:
-        data = data[data['Month'] == month]
+    if brand is not None:
+        data = data[data["Brand"].str.lower() == brand.lower()]
 
-    return data['Store_ID'].nunique()
+    # Step 2: Customer-level aggregation
+    customer_sales = (
+        data
+        .groupby("Customer")["Value"]
+        .sum()
+        .reset_index()
+    )
+
+    # Step 3: Sales > 0 condition
+    active_customers = customer_sales[customer_sales["Value"] > 0]
+
+    # Step 4: Business rule (-1)
+    return max(len(active_customers) - 1, 0)
 
 
 def active_stores_by_group(
-    df: pd.DataFrame,
-    group_by: str,
-    year: int = None
-) -> pd.DataFrame:
-    """
-    Active stores grouped by region / product / brand
-    """
+    df,
+    group_by,
+    year=None,
+    month=None,
+    brand=None
+):
     data = df.copy()
 
-    if year:
-        data = data[data['Year'] == year]
+    # Step 1: Apply filters
+    if year is not None:
+        data = data[data["Year"] == year]
 
-    result = (
-        data.groupby(group_by)['Store_ID']
-        .nunique()
-        .reset_index(name='Active_Stores')
-        .sort_values(by='Active_Stores', ascending=False)
+    if month is not None:
+        data = data[data["Month"] == month]
+
+    if brand is not None:
+        data = data[data["Brand"].str.lower() == brand.lower()]
+
+    # Step 2: Customer-level aggregation WITH group
+    customer_sales = (
+        data
+        .groupby([group_by, "Customer"])["Value"]
+        .sum()
+        .reset_index()
     )
 
-    return result
+    # Step 3: Sales > 0
+    active_customers = customer_sales[customer_sales["Value"] > 0]
+
+    # Step 4: Count customers per group
+    result = (
+        active_customers
+        .groupby(group_by)["Customer"]
+        .nunique()
+        .reset_index(name="Active_Stores")
+    )
+
+    # Step 5: Business rule (-1)
+    result["Active_Stores"] = result["Active_Stores"].apply(
+        lambda x: max(x - 1, 0)
+    )
+
+    return result.sort_values("Active_Stores", ascending=False)

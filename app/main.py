@@ -21,6 +21,8 @@ brands = sorted(df['Brand'].dropna().unique().tolist())
 years = sorted(df['Year'].dropna().unique().tolist())
 months = sorted(df['Month'].dropna().unique().tolist())
 
+customer_count = len(df["Customer"].dropna().unique().tolist())
+print("###########",customer_count)
 # Add "All" option
 brands.insert(0, "All")
 years.insert(0, "All")
@@ -115,6 +117,7 @@ if st.button("Ask"):
     month = intent.get("month")
     brand = intent.get("brand")
     chart = intent.get("chart")
+    compare = intent.get("compare", False)
 
     st.subheader("Answer")
 
@@ -172,28 +175,60 @@ if st.button("Ask"):
 
     # ACTIVE STORES
     elif metric == "active_stores":
-        if group_by:
+
+        # CASE 1: COMPARISON QUERY (this year vs last year)
+        if compare and group_by == "Year":
+
+            result_df = active_stores_by_group(
+                df,
+                group_by="Year",
+                brand=brand
+            )
+
+            # Keep only last 2 years
+            current_year = df["Year"].max()
+            result_df = result_df[
+                result_df["Year"].isin([current_year, current_year - 1])
+            ]
+
+            st.subheader("Active Stores Comparison (YoY)")
+            st.dataframe(result_df)
+
+            # Optional YoY calculation
+            if len(result_df) == 2:
+                yoy = (
+                    result_df.iloc[0]["Active_Stores"]
+                    - result_df.iloc[1]["Active_Stores"]
+                )
+                st.info(f"Year-on-Year Change: {yoy:+} stores")
+
+        # CASE 2: GROUPED (NON-COMPARE)
+        elif group_by is not None and isinstance(group_by, str):
+
             result_df = active_stores_by_group(
                 df,
                 group_by=group_by,
-                **filters
+                year=year,
+                month=month,
+                brand=brand
             )
 
             st.dataframe(result_df)
 
-            if chart and not result_df.empty:
-                title = f"Active Stores by {group_by}"
-                fig = auto_chart(
-                    result_df,
-                    x_col=group_by,
-                    y_col="Active_Stores",
-                    title=title
-                )
-                st.pyplot(fig)
-
+        # CASE 3: SIMPLE TOTAL
         else:
-            total = active_stores(df, **filters)
+            total = active_stores(
+                df,
+                year=year,
+                month=month,
+                brand=brand
+            )
             st.success(f"Total Active Stores: {total}")
+
+
+       
+
+        
 
 # st.write("Unique Months:", sorted(df["Month"].dropna().unique()))
 # st.write("Unique Years:", sorted(df["Year"].dropna().unique()))
