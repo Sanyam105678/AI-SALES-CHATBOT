@@ -14,7 +14,7 @@ def load_sales_data(file_path: str) -> pd.DataFrame:
     else:
         df = pd.read_excel(file_path)
 
-    print("############df",df)
+    # print("############df",df)
     return df
 
 
@@ -24,6 +24,7 @@ def preprocess_data(df):
     # Normalize Brand
     if "Brand" in df.columns:
         df["Brand"] = df["Brand"].astype(str).str.strip()
+        # print("##########df",df['Brand'].dropna().unique().tolist())
 
     # Handle Date → Year / Month
     if "Date" in df.columns:

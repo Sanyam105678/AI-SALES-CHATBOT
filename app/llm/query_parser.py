@@ -7,9 +7,9 @@ def parse_query_with_llm(user_query: str) -> Dict:
     Parse natural language query into structured intent
     (LLM placeholder – rule-based + prompt-ready)
     """
-
+    brand_list = ["delphy", "neo", "rasbury", "silk", "solerone","su ruc"]
     query = user_query.lower()
-
+    # print("############query",query)
     intent = {
         "metric": None,
         "group_by": None,
@@ -29,6 +29,12 @@ def parse_query_with_llm(user_query: str) -> Dict:
     # Chart detection
     if any(word in query for word in ["show", "chart", "graph", "plot", "trend"]):
         intent["chart"] = True
+
+    for brand in brand_list:
+        if brand in query:
+            # print("###################br",brand)
+        
+            intent["brand"] = brand
 
     # Group by detection
     if "month" in query:
@@ -60,7 +66,7 @@ def parse_query_with_llm(user_query: str) -> Dict:
 
     # Brand detection (simple placeholder)
     # Later this will come from dynamic brand list
-    if "neo" in query:
-        intent["brand"] = "Neo"
-    print("#################intent",intent)
+    # if "neo" in query:
+    #     intent["brand"] = "Neo"
+    # print("#################intent",intent)
     return intent

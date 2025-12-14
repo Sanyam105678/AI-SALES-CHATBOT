@@ -57,7 +57,7 @@ def auto_chart(
     Automatically choose chart type based on x-axis
     """
     # Time-based → Line chart
-    print("#####################x_col",x_col.lower())
+    # print("#####################x_col",x_col.lower())
     if x_col.lower() in ["year", "month", "quarter"]:
         return line_chart(df, x_col, y_col, title)
 

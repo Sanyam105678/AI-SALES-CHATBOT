@@ -28,7 +28,7 @@ months.insert(0, "All")
 
 selected_brand = st.selectbox("Brand", brands)
 selected_year = st.selectbox("Year", years)
-print("###################31",type(selected_year))
+# print("###################31",type(selected_year))
 selected_month = st.selectbox("Month", months)
 
 
@@ -195,8 +195,8 @@ if st.button("Ask"):
             total = active_stores(df, **filters)
             st.success(f"Total Active Stores: {total}")
 
-st.write("Unique Months:", sorted(df["Month"].dropna().unique()))
-st.write("Unique Years:", sorted(df["Year"].dropna().unique()))
-st.write("Unique Brands:", df["Brand"].unique()[:10])
+# st.write("Unique Months:", sorted(df["Month"].dropna().unique()))
+# st.write("Unique Years:", sorted(df["Year"].dropna().unique()))
+# st.write("Unique Brands:", df["Brand"].unique()[:10])
 
 
